@@ -1,8 +1,8 @@
 package com.example.board.controller;
 
 import com.example.board.dto.BoardDTO;
-import com.example.board.repository.BoardRepository;
 import com.example.board.service.BoardService;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,7 +28,7 @@ public class BoardController {
         return "save";
     }
     @PostMapping("/save")
-    public String save(@ModelAttribute BoardDTO boardDTO){
+    public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
         System.out.println("boardDTO = " + boardDTO);
         boardService.save(boardDTO);
         return "index";
