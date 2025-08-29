@@ -2,11 +2,65 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>list</title>
-
+  <title>Board List</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #ffe6f0;
+      color: #333;
+      padding: 20px;
+    }
+    h2 {
+      color: #ff3399;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    table {
+      background-color: #fff0f5;
+    }
+    th {
+      background-color: #ffb3d9;
+    }
+    a {
+      color: #ff3399;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .btn-pink {
+      background-color: #ff66b3;
+      color: white;
+    }
+    .btn-pink:hover {
+      background-color: #ff3399;
+      color: white;
+    }
+    .pagination a {
+      margin: 0 3px;
+      color: #ff3399;
+      text-decoration: none;
+    }
+    .pagination span.current {
+      font-weight: bold;
+      color: #fff;
+      background-color: #ff3399;
+      padding: 5px 10px;
+      border-radius: 5px;
+      margin: 0 3px;
+    }
+  </style>
 </head>
 <body>
-<table>
+<h2>게시판 목록</h2>
+
+<div class="mb-3">
+  <button class="btn btn-pink" onclick="saveReq()">글 작성</button>
+<button class="btn btn-pink" onclick="goIndex()">메인 화면</button>
+</div>
+<table class="table table-bordered text-center">
+  <thead>
   <tr>
     <th>id</th>
     <th>title</th>
@@ -14,20 +68,50 @@
     <th>date</th>
     <th>hits</th>
   </tr>
-  <tr th:each="board: ${boardList}">
+  </thead>
+  <tbody>
+  <tr th:each="board : ${boardList.content}">
     <td th:text="${board.id}"></td>
-    <td><a th:href="@{|/board/${board.id}|}" th:text="${board.boardTitle}"></a></td>
+    <td>
+      <a th:href="@{|/board/${board.id}|(page=${boardList.number + 1})}" th:text="${board.boardTitle}"></a>
+    </td>
     <td th:text="${board.boardWriter}"></td>
     <td th:text="*{#temporals.format(board.boardCreatedTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
     <td th:text="${board.boardHits}"></td>
   </tr>
-  <button type="button" onclick="goIndex()">초기화면</button>
-
-  <script th:inline="javascript">
-    const goIndex = () => {
-      location.href = "/"; // index.html 이 매핑된 주소로 이동
-    }
-  </script>
+  </tbody>
 </table>
+
+<!-- 페이징 -->
+<nav class="pagination mt-4 text-center">
+  <!-- 첫 페이지 -->
+  <a th:href="@{/board/paging(page=1)}">First</a>
+
+  <!-- 이전 블록 -->
+  <a th:href="${boardList.first} ? '#' : @{/board/paging(page=${boardList.number})}">Prev</a>
+
+  <!-- 페이지 번호 -->
+  <span th:each="page : ${#numbers.sequence(startPage, endPage)}">
+      <span th:if="${page == boardList.number + 1}" class="current" th:text="${page}"></span>
+      <span th:unless="${page == boardList.number + 1}">
+        <a th:href="@{/board/paging(page=${page})}" th:text="${page}"></a>
+      </span>
+    </span>
+
+  <!-- 다음 블록 -->
+  <a th:href="${boardList.last} ? '#' : @{/board/paging(page=${boardList.number + 2})}">Next</a>
+
+  <!-- 마지막 페이지 -->
+  <a th:href="@{/board/paging(page=${boardList.totalPages})}">Last</a>
+</nav>
+
+<script>
+  const saveReq = () => {
+    location.href = "/board/save";
+  }
+  const goIndex = () => {
+    location.href = "/"; // index.html 주소
+  }
+</script>
 </body>
 </html>

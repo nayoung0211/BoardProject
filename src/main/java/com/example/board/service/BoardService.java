@@ -2,6 +2,8 @@ package com.example.board.service;
 
 import com.example.board.dto.BoardDTO;
 import com.example.board.entity.BoardEntity;
+import com.example.board.entity.BoardFileEntity;
+import com.example.board.repository.BoardFileRepository;
 import com.example.board.repository.BoardRepository;
 import jakarta.transaction.Transactional;
 import java.io.File;
@@ -25,6 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final BoardFileRepository  boardFileRepository;
+
 
     //디티오 -> 엔티티 변환
     public void save(BoardDTO boardDTO) throws IOException {
@@ -44,12 +48,21 @@ public class BoardService {
             6.board table에 해당 데이터 save 처리
             7.board_file_table에 해당데이터 save 처리
              */
-            MultipartFile boardFile = boardDTO.getBoardFile(); //1
-            String originalFilename = boardFile.getOriginalFilename(); //2
-            String storedFileName = System.currentTimeMillis()+"_"+originalFilename; //3
-            String savePath = "C:/springboot_img/"+storedFileName; //4 C:/springboot_img/9802398403948_내사진
-            boardFile.transferTo(new File(savePath));//5
+            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
+            Long saveId = boardRepository.save(boardEntity).getId();
+            BoardEntity board = boardRepository.findById(saveId).get();
+            for(MultipartFile boardFile: boardDTO.getBoardFile()) {
 
+                String originalFilename = boardFile.getOriginalFilename(); //2
+                String storedFileName = System.currentTimeMillis() + "_" + originalFilename; //3
+                String savePath =
+                    "C:/springboot_img/" + storedFileName; //4 C:/springboot_img/9802398403948_내사진
+                boardFile.transferTo(new File(savePath));//5
+
+                BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board,
+                    originalFilename, storedFileName);
+                boardFileRepository.save(boardFileEntity);
+            }
         }
     }
 
@@ -57,7 +70,7 @@ public class BoardService {
         List<BoardEntity> boardEntityList = boardRepository.findAll();
         List<BoardDTO> boardDTOList = new ArrayList<>();
         for(BoardEntity boardEntity : boardEntityList){
-            boardDTOList.add(BoardDTO.toDTO(boardEntity));
+            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity));
         }
         return boardDTOList;
     }
@@ -66,11 +79,12 @@ public class BoardService {
         boardRepository.updateHits(id);
     }
 
+    @Transactional
     public BoardDTO findById(Long id) {
         Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
         if(optionalBoardEntity.isPresent()) {
             BoardEntity  boardEntity = optionalBoardEntity.get();
-            BoardDTO boardDTO = BoardDTO.toDTO(boardEntity);
+            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
             return boardDTO;
         }else{
             return null;
